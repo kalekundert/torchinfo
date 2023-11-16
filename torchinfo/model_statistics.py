@@ -16,6 +16,7 @@ class ModelStatistics:
         input_size: Any,
         total_input_size: int,
         formatting: FormattingOptions,
+        t_elapsed: int,
     ) -> None:
         self.summary_list = summary_list
         self.input_size = input_size
@@ -24,6 +25,7 @@ class ModelStatistics:
         self.total_mult_adds = 0
         self.total_params, self.trainable_params = 0, 0
         self.total_param_bytes, self.total_output_bytes = 0, 0
+        self.t_elapsed = t_elapsed
 
         # TODO: Figure out why the below functions using max() are ever 0
         # (they should always be non-negative), and remove the call to max().
@@ -80,6 +82,7 @@ class ModelStatistics:
                 self.total_input + self.total_output_bytes + self.total_param_bytes
             )
             summary_str += (
+                f"Time elapsed (ms): {self.t_elapsed * 1000}\n"
                 f"Total mult-adds{macs}\n{divider}\n"
                 f"Input size (MB): {input_size:0.2f}\n"
                 f"Forward/backward pass size (MB): {output_bytes:0.2f}\n"

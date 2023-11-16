@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 import warnings
+import time
 from typing import (
     Any,
     Callable,
@@ -220,12 +221,13 @@ def summary(
     x, correct_input_size = process_input(
         input_data, input_size, batch_dim, device, dtypes
     )
-    summary_list = forward_pass(
+    summary_list, t_elapsed = forward_pass(
         model, x, batch_dim, cache_forward_pass, device, model_mode, **kwargs
     )
     formatting = FormattingOptions(depth, verbose, columns, col_width, rows)
     results = ModelStatistics(
-        summary_list, correct_input_size, get_total_memory_used(x), formatting
+        summary_list, correct_input_size, get_total_memory_used(x), formatting,
+        t_elapsed
     )
     if verbose > Verbosity.QUIET:
         print(results)
@@ -291,6 +293,7 @@ def forward_pass(
 
         with torch.no_grad():
             model = model if device is None else model.to(device)
+            t_start = time.perf_counter()
             if isinstance(x, (list, tuple)):
                 _ = model(*x, **kwargs)
             elif isinstance(x, dict):
@@ -299,6 +302,7 @@ def forward_pass(
                 # Should not reach this point, since process_input_data ensures
                 # x is either a list, tuple, or dict
                 raise ValueError("Unknown input type")
+            t_elapsed = time.perf_counter() - t_start
     except Exception as e:
         executed_layers = [layer for layer in summary_list if layer.executed]
         raise RuntimeError(
@@ -316,7 +320,7 @@ def forward_pass(
     set_children_layers(summary_list)
 
     _cached_forward_pass[model_name] = summary_list
-    return summary_list
+    return summary_list, t_elapsed
 
 
 def set_children_layers(summary_list: list[LayerInfo]) -> None:
