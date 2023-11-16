@@ -114,6 +114,10 @@ class LayerInfo:
             if batch_dim is not None:
                 size = [size[:batch_dim] + [1] + size[batch_dim + 1 :]]
 
+        elif hasattr(inputs, 'tensor'):
+            size = list(inputs.tensor.size())
+            elem_bytes = inputs.tensor.element_size()
+
         elif isinstance(inputs, torch.Tensor):
             size = list(inputs.size())
             elem_bytes = inputs.element_size()
